@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { database } from "./firebase";
+import { ref, get, set, update } from "firebase/database";
 
 const lectures = [
   {
@@ -39,7 +41,39 @@ const lectures = [
 const LectureView = () => {
   const { lectureId } = useParams();
   const navigate = useNavigate();
+  const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const lecture = lectures.find((l) => l.id === lectureId);
+
+  const handleMarkCompleted = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const progressRef = ref(
+        database,
+        `users/${userId}/progress/completedLectures`
+      );
+      const snapshot = await get(progressRef);
+      let completedLectures = [];
+      if (snapshot.exists()) {
+        completedLectures = snapshot.val();
+        if (!Array.isArray(completedLectures)) completedLectures = [];
+      }
+      if (!completedLectures.includes(lectureId)) {
+        completedLectures.push(lectureId);
+        await set(progressRef, completedLectures);
+      }
+      setCompleted(true);
+    } catch (err) {
+      alert("Failed to mark as completed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!lecture) return <div>Lecture not found.</div>;
 
@@ -66,6 +100,20 @@ const LectureView = () => {
         </div>
       )}
       <p className="lecture-desc">{lecture.description}</p>
+      <button
+        className="mark-completed-btn"
+        onClick={handleMarkCompleted}
+        disabled={completed || loading}
+      >
+        {completed
+          ? "Completed!"
+          : loading
+          ? "Marking..."
+          : "Mark as Completed"}
+      </button>
+      {completed && (
+        <div className="completed-msg">Lecture marked as completed!</div>
+      )}
     </div>
   );
 };
