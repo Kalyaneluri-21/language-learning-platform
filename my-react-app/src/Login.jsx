@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "./firebase";
+import { auth, database } from "./firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { ref, get } from "firebase/database";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,8 +21,20 @@ const Login = () => {
         email,
         password
       );
-      localStorage.setItem("userId", userCredential.user.uid);
-      navigate("/dashboard");
+      const userId = userCredential.user.uid;
+      localStorage.setItem("userId", userId);
+      // Fetch user role from database
+      const userRef = ref(database, `users/${userId}`);
+      const snapshot = await get(userRef);
+      let role = "user";
+      if (snapshot.exists() && snapshot.val().role) {
+        role = snapshot.val().role;
+      }
+      if (role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       let message = "Something went wrong. Please try again later.";
       if (err.code === "auth/invalid-credential") {

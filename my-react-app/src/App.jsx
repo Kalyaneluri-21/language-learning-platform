@@ -8,6 +8,7 @@ import Progress from "./Progress";
 import CulturalInsights from "./CulturalInsights";
 import WeeklyChallenge from "./WeeklyChallenge";
 import LectureView from "./LectureView";
+import AdminDashboard from "./AdminDashboard";
 import "./App.css";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/dashboard/*" element={<Dashboard />}>
         <Route path="lessons" element={<Lessons />} />
         <Route path="lessons/:lectureId" element={<LectureView />} />
